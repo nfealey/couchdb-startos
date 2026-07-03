@@ -18,10 +18,12 @@ export const manifest = setupManifest({
     },
   },
   alerts: {
-    install: null,
+    install:
+      'CouchDB generates a unique admin password the first time it starts. After starting the service, run the "Show Credentials" action to retrieve your username and password, then use them to set up the Self-hosted LiveSync plugin in Obsidian.',
     update: null,
     uninstall: null,
-    restore: null,
+    restore:
+      'Restoring reverts CouchDB to the data and admin credentials captured in this backup. If you changed your password after this backup was taken, the older password will apply again — run the "Show Credentials" action after restoring to confirm your current login.',
     start: null,
     stop: null,
   },
