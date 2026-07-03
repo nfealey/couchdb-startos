@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="couchGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#E74C3C"/>
+      <stop offset="100%" style="stop-color:#C0392B"/>
+    </linearGradient>
+  </defs>
+  <!-- Couch base -->
+  <rect x="10" y="50" width="80" height="30" rx="5" fill="url(#couchGrad)"/>
+  <!-- Couch back -->
+  <rect x="10" y="35" width="80" height="20" rx="5" fill="url(#couchGrad)"/>
+  <!-- Couch arms -->
+  <rect x="5" y="40" width="12" height="35" rx="4" fill="url(#couchGrad)"/>
+  <rect x="83" y="40" width="12" height="35" rx="4" fill="url(#couchGrad)"/>
+  <!-- Cushion lines -->
+  <line x1="37" y1="52" x2="37" y2="75" stroke="#A93226" stroke-width="2"/>
+  <line x1="63" y1="52" x2="63" y2="75" stroke="#A93226" stroke-width="2"/>
+  <!-- DB text -->
+  <text x="50" y="28" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#E74C3C" text-anchor="middle">DB</text>
+</svg>
