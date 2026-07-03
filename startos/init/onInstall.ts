@@ -19,7 +19,7 @@ export const onInstall = sdk.setupOnInit(async (effects, kind) => {
     })
   }
 
-  await sdk.action.createOwnTask(effects, showCredentials, 'important', {
+  await sdk.action.createOwnTask(effects, showCredentials, 'critical', {
     reason: i18n('View your CouchDB credentials for Obsidian LiveSync'),
   })
 })

@@ -34,7 +34,7 @@ export const main = sdk.setupMain(async ({ effects }) => {
   // Keyed on a persisted flag rather than store existence, so it fires reliably
   // even though the store may have been created before this point.
   if (!store.credentialsShown) {
-    await sdk.action.createOwnTask(effects, showCredentials, 'important', {
+    await sdk.action.createOwnTask(effects, showCredentials, 'critical', {
       reason: i18n('View your CouchDB credentials for Obsidian LiveSync'),
     })
     await storeJson.write(effects, { ...store, credentialsShown: true })
