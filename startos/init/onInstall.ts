@@ -11,7 +11,7 @@ import { showCredentials } from '../actions/showCredentials'
 export const onInstall = sdk.setupOnInit(async (effects, kind) => {
   if (kind !== 'install') return
 
-  const store = await storeJson.read().const(effects)
+  const store = await storeJson.read().once()
   if (!store) {
     await storeJson.write(effects, {
       adminPassword: getPassword(),

@@ -10,7 +10,7 @@ export const main = sdk.setupMain(async ({ effects }) => {
 
   // Read password from store, or generate one if this is the first run.
   // main() is the single source of truth for credential generation.
-  let store = await storeJson.read().const(effects)
+  let store = await storeJson.read().once()
 
   if (!store) {
     console.info('First run detected, generating admin password...')

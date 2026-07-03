@@ -1,10 +1,10 @@
 import { IMPOSSIBLE, VersionInfo } from '@start9labs/start-sdk'
 
 export const current = VersionInfo.of({
-  version: '3.4.0:5',
+  version: '3.4.0:6',
   releaseNotes: {
     en_US:
-      'Reliability fixes: password reset now applies correctly, credentials are managed via local.ini, readiness is checked over HTTP, and the "Show Credentials" task fires reliably on first run.',
+      'Fix install failure (write-after-const on store.json), surface credentials via an install-time task, and reliability fixes: password reset applies correctly, credentials managed via local.ini, HTTP readiness check.',
   },
   migrations: {
     // Password generation and config writing are handled by main() on first

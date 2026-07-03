@@ -25,7 +25,7 @@ export const resetPassword = sdk.Action.withoutInput(
     const newPassword = getPassword()
 
     // Update store, preserving other fields (e.g. credentialsShown)
-    const store = await storeJson.read().const(effects)
+    const store = await storeJson.read().once()
     await storeJson.write(effects, {
       ...store,
       adminPassword: newPassword,
