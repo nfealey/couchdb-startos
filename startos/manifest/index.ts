@@ -18,8 +18,9 @@ export const manifest = setupManifest({
     },
   },
   alerts: {
-    install:
-      'CouchDB generates a unique admin password the first time it starts. After starting the service, run the "Show Credentials" action to retrieve your username and password, then use them to set up the Self-hosted LiveSync plugin in Obsidian.',
+    // No install alert: credentials are surfaced right after install by an
+    // "important" task (see startos/init/onInstall.ts), not a pre-install popup.
+    install: null,
     update: null,
     uninstall: null,
     restore:
