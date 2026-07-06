@@ -21,6 +21,12 @@
 5. Click "Test Connection" to verify
 6. Enable "Live Sync" to start syncing
 
+## Maintenance: Reclaiming Disk Space
+
+CouchDB keeps old revisions of every document on disk until it compacts. Because Obsidian LiveSync writes a new revision on every change, your database grows over time — and a LiveSync "cleanup"/"rebuild" only *marks* old data for removal; CouchDB doesn't reclaim the space until it compacts.
+
+Run the **Compact Databases** action periodically (the service can stay running) to compact every database and its view indexes and shrink the on-disk files. It's especially worth running right after a LiveSync cleanup or rebuild. Compaction happens in the background, so large databases may take a few minutes to finish after the action reports.
+
 ## Creating Additional Databases
 
 If you want separate vaults in different databases:

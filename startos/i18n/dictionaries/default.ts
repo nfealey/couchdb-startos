@@ -27,6 +27,13 @@ const dict = {
   'Your password has been reset. Update your Obsidian LiveSync settings with the new password.': 18,
   'New Password': 19,
   'View your CouchDB credentials for Obsidian LiveSync': 20,
+  'Compact Databases': 21,
+  'Reclaim disk space by compacting every database and its indexes. CouchDB keeps old document revisions on disk until compaction runs, so this can free significant space after heavy syncing or a LiveSync cleanup.': 22,
+  'Compaction runs in the background and the service keeps serving requests. Large databases may take several minutes to finish.': 23,
+  'Compaction Started': 24,
+  'Compaction started for ${count} database(s). Large databases may take a few minutes to finish in the background.': 25,
+  'Databases': 26,
+  'Failed to start': 27,
 } as const
 
 /**
