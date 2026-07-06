@@ -119,17 +119,68 @@ jobs:
           path: dist
           merge-multiple: true
 
+      - name: Install start-cli
+        env:
+          START_CLI_TAG: v0.4.0-beta.9
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          curl -fsSL \
+            "https://github.com/Start9Labs/start-os/releases/download/${START_CLI_TAG}/start-cli_x86_64-linux" \
+            -o "$HOME/.local/bin/start-cli"
+          chmod +x "$HOME/.local/bin/start-cli"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Compose release notes
+        # Build the release body from the packaged manifest, so the notes track
+        # a single source of truth: `releaseNotes` in startos/versions/current.ts
+        # feeds both StartOS's update screen and this GitHub Release.
+        run: |
+          pkg=$(ls dist/*_x86_64.s9pk | head -n1)
+          manifest=$(start-cli s9pk inspect "$pkg" manifest)
+          version=$(printf '%s' "$manifest" | jq -r .version)
+          title=$(printf '%s' "$manifest" | jq -r .title)
+          descShort=$(printf '%s' "$manifest" | jq -r '.description.short.en_US // ""')
+          notes=$(printf '%s' "$manifest" | jq -r '.releaseNotes.en_US // ""')
+          sdk=$(printf '%s' "$manifest" | jq -r .sdkVersion)
+          {
+            echo "$descShort"
+            echo
+            if [ -n "$notes" ]; then echo "## What's new"; echo; echo "$notes"; echo; fi
+            echo "## Install"
+            echo
+            echo "Download the \`.s9pk\` for your server's architecture and sideload it via **System → Sideload** in the StartOS UI:"
+            echo
+            echo "- **ARM / aarch64** (e.g. Raspberry Pi, Start9 Pure): \`couchdb_aarch64.s9pk\`"
+            echo "- **x86_64 / amd64**: \`couchdb_x86_64.s9pk\`"
+            echo
+            echo "## After installing"
+            echo
+            echo "Your admin password is generated automatically — there is no default. To retrieve it:"
+            echo
+            echo "1. Open the **CouchDB** service in StartOS."
+            echo "2. Go to the **Actions** tab."
+            echo "3. Run **Show Credentials** — your username (\`admin\`) and password are displayed; tap to copy."
+            echo
+            echo "StartOS also raises this as a task right after install, so you can jump straight to it. Use the same username and password in Obsidian's **Self-hosted LiveSync** plugin."
+            echo
+            echo "_${title} ${version} · SDK ${sdk}_"
+          } > release-notes.md
+          echo "----- release-notes.md -----"; cat release-notes.md
+
       - name: Create or update GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           ls -lh dist
-          # Create the release with the .s9pk assets; if it already exists (a
-          # re-run of the same tag), upload/replace the assets instead.
+          # Create the release with the .s9pk assets and composed notes; if it
+          # already exists (a re-run of the same tag), refresh the notes and
+          # replace the assets instead.
           if ! gh release create "$GITHUB_REF_NAME" dist/*.s9pk \
                 --repo "$GITHUB_REPOSITORY" \
                 --title "$GITHUB_REF_NAME" \
-                --generate-notes; then
+                --notes-file release-notes.md; then
+            gh release edit "$GITHUB_REF_NAME" \
+                --repo "$GITHUB_REPOSITORY" --notes-file release-notes.md
             gh release upload "$GITHUB_REF_NAME" dist/*.s9pk \
                 --repo "$GITHUB_REPOSITORY" --clobber
           fi
