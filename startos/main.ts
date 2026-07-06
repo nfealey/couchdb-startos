@@ -3,20 +3,19 @@ import { sdk } from './sdk'
 import { couchdbPort, mounts, getPassword } from './utils'
 import { storeJson } from './fileModels/store.json'
 import { localIni, generateLocalIni } from './fileModels/local.ini'
-import { showCredentials } from './actions/showCredentials'
 
 export const main = sdk.setupMain(async ({ effects }) => {
   console.info(i18n('Starting CouchDB...'))
 
-  // Read password from store, or generate one if this is the first run.
-  // main() is the single source of truth for credential generation.
+  // Read the store. On a normal install onInstall has already generated the
+  // password (and surfaced the credentials task); this handles the pathological
+  // case where the store is somehow absent so the daemon can still start.
   let store = await storeJson.read().once()
 
   if (!store) {
-    console.info('First run detected, generating admin password...')
+    console.info('No store found, generating admin password...')
     store = {
       adminPassword: getPassword(),
-      credentialsShown: false,
       firstStartNotified: false,
     }
     await storeJson.write(effects, store)
@@ -34,19 +33,10 @@ export const main = sdk.setupMain(async ({ effects }) => {
     'couchdb-sub',
   )
 
-  // Surface the credentials task exactly once, the first time the service runs.
-  // Keyed on a persisted flag rather than store existence, so it fires reliably
-  // even though the store may have been created before this point.
-  if (!store.credentialsShown) {
-    await sdk.action.createOwnTask(effects, showCredentials, 'critical', {
-      reason: i18n('View your CouchDB credentials for Obsidian LiveSync'),
-    })
-    store = { ...store, credentialsShown: true }
-    await storeJson.write(effects, store)
-  }
-
-  // Post a one-time notification the first time the service actually starts,
-  // giving the user a persistent panel entry pointing at their credentials.
+  // Surfacing the credentials task is owned entirely by onInstall (raised once
+  // at install time). Here we only post a one-time notification the first time
+  // the service actually starts, giving the user a persistent panel entry
+  // pointing at their credentials.
   if (!store.firstStartNotified) {
     await sdk.notification.create(effects, {
       level: 'info',

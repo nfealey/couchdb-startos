@@ -33,7 +33,6 @@ export const resetPassword = sdk.Action.withoutInput(
 
     await storeJson.write(effects, {
       adminPassword: newPassword,
-      credentialsShown: store?.credentialsShown ?? true,
       firstStartNotified: store?.firstStartNotified ?? true,
     })
 

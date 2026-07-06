@@ -4,10 +4,12 @@ import { storeJson } from '../fileModels/store.json'
 import { getPassword } from '../utils'
 import { showCredentials } from '../actions/showCredentials'
 
-// Runs at install time, after actions are registered. Generates the admin
-// password up front so the credentials exist immediately, and raises an
-// "important" task surfacing the Show Credentials action — so the user can view
-// their login as soon as the service is installed, without starting it first.
+// Runs once at install time, after actions are registered. This is the single
+// owner of surfacing credentials: it generates the admin password up front (so
+// the credentials exist immediately, before the first start) and raises the
+// critical task pointing at the Show Credentials action. Because it runs
+// exactly once per install, the task fires exactly once with no coordinating
+// flag needed. main() posts a complementary first-start notification.
 export const onInstall = sdk.setupOnInit(async (effects, kind) => {
   if (kind !== 'install') return
 
@@ -15,7 +17,6 @@ export const onInstall = sdk.setupOnInit(async (effects, kind) => {
   if (!store) {
     await storeJson.write(effects, {
       adminPassword: getPassword(),
-      credentialsShown: true,
       // Leave false so the first *start* (in main) posts the running
       // notification; this install path only pre-generates credentials.
       firstStartNotified: false,
