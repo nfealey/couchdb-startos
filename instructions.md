@@ -4,7 +4,7 @@
 
 1. Start the CouchDB service
 2. Run the **Show Credentials** action to view your auto-generated admin username and password. A unique password is created automatically on first run — there is no shared default.
-3. (Optional) Run the **Reset Password** action at any time to rotate the password. Stop the service first; you'll then need to update your Obsidian LiveSync settings with the new password.
+3. (Optional) Run the **Reset Password** action at any time to rotate the password — it works whether the service is running or stopped (a running service is updated live, with no downtime). Afterward, update your Obsidian LiveSync settings with the new password.
 
 ## Connecting Obsidian LiveSync
 

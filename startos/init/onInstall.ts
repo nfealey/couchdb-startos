@@ -16,6 +16,9 @@ export const onInstall = sdk.setupOnInit(async (effects, kind) => {
     await storeJson.write(effects, {
       adminPassword: getPassword(),
       credentialsShown: true,
+      // Leave false so the first *start* (in main) posts the running
+      // notification; this install path only pre-generates credentials.
+      firstStartNotified: false,
     })
   }
 

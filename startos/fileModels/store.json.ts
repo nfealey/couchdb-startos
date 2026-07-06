@@ -8,6 +8,11 @@ const shape = z
     // user. Tracked here (rather than inferring from store existence) so the
     // task fires exactly once regardless of who created the store.
     credentialsShown: z.boolean().default(false),
+    // Whether the one-time "service is running" notification has been sent.
+    // Keyed separately from credentialsShown because that flag is set at
+    // install time (before the first start), so it can't double as a
+    // first-start signal.
+    firstStartNotified: z.boolean().default(false),
   })
   .strip()
 

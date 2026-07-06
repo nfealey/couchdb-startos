@@ -41,7 +41,7 @@ make install
 ## Security Notes
 
 - A unique admin password is generated automatically on first run — retrieve it via the **Show Credentials** action (there is no shared default password)
-- Rotate the password at any time with the **Reset Password** action (stop the service first)
+- Rotate the password at any time with the **Reset Password** action — it applies live while the service is running (no downtime) and also works when stopped
 - Access CouchDB's Fauxton web UI to manage databases and users
 - Consider enabling end-to-end encryption in the LiveSync plugin settings
 

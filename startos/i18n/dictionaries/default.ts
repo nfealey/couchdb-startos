@@ -22,7 +22,7 @@ const dict = {
   'Password': 13,
   'Reset Password': 14,
   'Generate a new admin password': 15,
-  'This will change your CouchDB password. You will need to update your Obsidian LiveSync settings.': 16,
+  'This will change your CouchDB password. You will need to update your Obsidian LiveSync settings with the new password.': 16,
   'Password Reset': 17,
   'Your password has been reset. Update your Obsidian LiveSync settings with the new password.': 18,
   'New Password': 19,
@@ -34,6 +34,12 @@ const dict = {
   'Compaction started for ${count} database(s). Large databases may take a few minutes to finish in the background.': 25,
   'Databases': 26,
   'Failed to start': 27,
+  'CouchDB password changed': 28,
+  'The admin password was reset and applied immediately. Update your Obsidian LiveSync settings with the new password.': 29,
+  'The admin password was reset and takes effect the next time the service starts. Update your Obsidian LiveSync settings with the new password.': 30,
+  'Your password has been reset and is active now. Update your Obsidian LiveSync settings with the new password.': 31,
+  'CouchDB is running': 32,
+  'CouchDB is ready for Obsidian LiveSync. Retrieve your admin login with the Show Credentials action.': 33,
 } as const
 
 /**

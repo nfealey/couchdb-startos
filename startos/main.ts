@@ -14,7 +14,11 @@ export const main = sdk.setupMain(async ({ effects }) => {
 
   if (!store) {
     console.info('First run detected, generating admin password...')
-    store = { adminPassword: getPassword(), credentialsShown: false }
+    store = {
+      adminPassword: getPassword(),
+      credentialsShown: false,
+      firstStartNotified: false,
+    }
     await storeJson.write(effects, store)
   }
 
@@ -37,7 +41,22 @@ export const main = sdk.setupMain(async ({ effects }) => {
     await sdk.action.createOwnTask(effects, showCredentials, 'critical', {
       reason: i18n('View your CouchDB credentials for Obsidian LiveSync'),
     })
-    await storeJson.write(effects, { ...store, credentialsShown: true })
+    store = { ...store, credentialsShown: true }
+    await storeJson.write(effects, store)
+  }
+
+  // Post a one-time notification the first time the service actually starts,
+  // giving the user a persistent panel entry pointing at their credentials.
+  if (!store.firstStartNotified) {
+    await sdk.notification.create(effects, {
+      level: 'info',
+      title: i18n('CouchDB is running'),
+      message: i18n(
+        'CouchDB is ready for Obsidian LiveSync. Retrieve your admin login with the Show Credentials action.',
+      ),
+    })
+    store = { ...store, firstStartNotified: true }
+    await storeJson.write(effects, store)
   }
 
   return sdk.Daemons.of(effects).addDaemon('couchdb', {
