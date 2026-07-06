@@ -1,0 +1,132 @@
+name: Release
+
+# Build the .s9pk packages and attach them to a GitHub Release when a version
+# tag is pushed (e.g. `v3.4.0-10`). The attached assets are installable by URL
+# on StartOS via System → Sideload. Also runnable via workflow_dispatch to
+# smoke-test the build without cutting a release.
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+# Least privilege by default; only the release job needs write access to
+# create releases and upload assets.
+permissions:
+  contents: read
+
+jobs:
+  # Read the Makefile's TARGETS list (x86 arm) and turn it into a JSON matrix,
+  # so we fan out one runner per architecture — the design the `print-%` target
+  # in s9pk.mk was built for. This step needs only `make`, not start-cli.
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      targets: ${{ steps.set.outputs.targets }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: set
+        run: |
+          targets=$(make -s print-TARGETS | tr ' ' '\n' | grep -v '^$' | jq -R . | jq -cs .)
+          echo "targets=$targets" >> "$GITHUB_OUTPUT"
+          echo "Build matrix: $targets"
+
+  build:
+    needs: prepare
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ${{ fromJSON(needs.prepare.outputs.targets) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y squashfs-tools squashfs-tools-ng
+
+      # Insurance for cross-architecture image extraction: on this x86 runner,
+      # packing the aarch64 target reads an arm64 image's filesystem. Registering
+      # QEMU/binfmt makes that reliable regardless of how start-cli extracts it.
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Install start-cli
+        run: |
+          curl -fsSL https://start9.com/start-cli/install.sh | sh
+          # The installer configures PATH for interactive shells only; GitHub
+          # `run:` steps are non-interactive, so locate the binary and expose
+          # its directory to subsequent steps.
+          bin="$(command -v start-cli || true)"
+          if [ -z "$bin" ]; then
+            bin="$(find "$HOME" -maxdepth 5 -name start-cli -type f -perm -u+x 2>/dev/null | head -n1)"
+          fi
+          if [ -z "$bin" ]; then
+            echo "::error::start-cli not found after install — adjust the PATH detection in release.yml"
+            exit 1
+          fi
+          echo "$(dirname "$bin")" >> "$GITHUB_PATH"
+
+      - name: Verify start-cli
+        run: start-cli --version
+
+      - name: Set up signing key
+        env:
+          # Optional: set a repo secret STARTOS_DEVELOPER_KEY (the PEM contents
+          # of ~/.startos/developer.key.pem) to sign every release with the same
+          # stable identity — recommended so StartOS treats successive releases
+          # as updates from the same publisher. Without it, each build generates
+          # an ephemeral key, which still produces a valid, installable .s9pk.
+          STARTOS_DEVELOPER_KEY: ${{ secrets.STARTOS_DEVELOPER_KEY }}
+        run: |
+          mkdir -p ~/.startos
+          if [ -n "$STARTOS_DEVELOPER_KEY" ]; then
+            printf '%s\n' "$STARTOS_DEVELOPER_KEY" > ~/.startos/developer.key.pem
+            echo "Using persistent developer key from secret."
+          else
+            start-cli init-key
+            echo "::notice::No STARTOS_DEVELOPER_KEY secret set — generated an ephemeral signing key for this build."
+          fi
+
+      - name: Build ${{ matrix.target }}
+        run: make ${{ matrix.target }}
+
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: s9pk-${{ matrix.target }}
+          path: '*.s9pk'
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    # Only publish a release for tag pushes; workflow_dispatch runs stop after
+    # build (artifacts are still available for download from the run).
+    if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
+    steps:
+      - name: Download all packages
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Create or update GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ls -lh dist
+          # Create the release with the .s9pk assets; if it already exists (a
+          # re-run of the same tag), upload/replace the assets instead.
+          if ! gh release create "$GITHUB_REF_NAME" dist/*.s9pk \
+                --repo "$GITHUB_REPOSITORY" \
+                --title "$GITHUB_REF_NAME" \
+                --generate-notes; then
+            gh release upload "$GITHUB_REF_NAME" dist/*.s9pk \
+                --repo "$GITHUB_REPOSITORY" --clobber
+          fi
