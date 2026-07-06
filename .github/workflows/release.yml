@@ -55,20 +55,23 @@ jobs:
         uses: docker/setup-qemu-action@v3
 
       - name: Install start-cli
+        env:
+          # Pin start-cli to the version this repo actually builds with (the
+          # 0.4.0-beta line that pairs with @start9labs/start-sdk in
+          # package.json). The official install.sh only ever fetches the newest
+          # release — currently a 2.x line whose asset naming differs and which
+          # is a major version ahead of this package's SDK — so we download the
+          # pinned Linux binary directly. Runners are x86_64 Linux regardless of
+          # the target package architecture; the same start-cli packs all arches
+          # via `--arch`. Bump this in lockstep with the SDK in package.json.
+          START_CLI_TAG: v0.4.0-beta.9
         run: |
-          curl -fsSL https://start9.com/start-cli/install.sh | sh
-          # The installer configures PATH for interactive shells only; GitHub
-          # `run:` steps are non-interactive, so locate the binary and expose
-          # its directory to subsequent steps.
-          bin="$(command -v start-cli || true)"
-          if [ -z "$bin" ]; then
-            bin="$(find "$HOME" -maxdepth 5 -name start-cli -type f -perm -u+x 2>/dev/null | head -n1)"
-          fi
-          if [ -z "$bin" ]; then
-            echo "::error::start-cli not found after install — adjust the PATH detection in release.yml"
-            exit 1
-          fi
-          echo "$(dirname "$bin")" >> "$GITHUB_PATH"
+          mkdir -p "$HOME/.local/bin"
+          curl -fsSL \
+            "https://github.com/Start9Labs/start-os/releases/download/${START_CLI_TAG}/start-cli_x86_64-linux" \
+            -o "$HOME/.local/bin/start-cli"
+          chmod +x "$HOME/.local/bin/start-cli"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Verify start-cli
         run: start-cli --version
